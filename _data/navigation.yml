@@ -3,6 +3,8 @@ main:
     url: /index
 
 sidemain:
+  - title: "Home"
+    url: /index
   - title: "Specifications"
     children:
       - title: API Specification
