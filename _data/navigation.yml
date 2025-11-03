@@ -9,6 +9,8 @@ sidemain:
         url: /apiv4/index.html
   - title: "Example Payloads"
     children:
+      - title: "Rate Line Types"
+        url: /examples/rate_line_types.md
       - title: "Parking Restrictions"
         url: /examples/restrictions.md
 
