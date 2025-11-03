@@ -3,7 +3,7 @@ window.onload = function() {
 
   // the following lines will be replaced by docker/configurator, when it runs in a docker-container
   window.ui = SwaggerUIBundle({
-    url: "https://sandbox.parking-data-standard.org/apiv4/apds4.yaml",
+    url: "https://sandbox.parking-data-standards.org/apiv4/apds4.yaml",
     dom_id: '#swagger-ui',
     deepLinking: true,
     presets: [
