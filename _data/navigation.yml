@@ -5,10 +5,8 @@ main:
 sidemain:
   - title: "Pilot"
     children:
-      - title: "Pilot Outline"
-        url: /pilot_outline
-      - title: "Pilot Phases"  
-        url: /phases
+      - title: API Specification
+        url: /apiv4/index.html
   - title: "Pilot Use Cases"
     children:
       - title: "Use Cases"
