@@ -1,0 +1,46 @@
+main:
+  - title: Home 
+    url: /index
+
+sidemain:
+  - title: "Pilot"
+    children:
+      - title: "Pilot Outline"
+        url: /pilot_outline
+      - title: "Pilot Phases"  
+        url: /phases
+  - title: "Pilot Use Cases"
+    children:
+      - title: "Use Cases"
+        url: /usecases
+      - title: "Sample Flows"
+        url: /flows
+      - title: "Evidence"
+        url: /evidence 
+  - title: "NPP Session Viewer"
+    url: /session_viewer
+  - title: "Standard Location Codes"
+    url: /StandardLocations
+  - title: "Presentations"
+    children:
+      - title: "Presentations"
+        url: /presentations
+      - title: "APDS Overview"
+        url: /assets/pdf/APDS-Introduction-v1.1.pdf
+      - title: "Operator Info Pack"
+        url: /assets/pdf/op-information-pack.pdf
+      - title: "Service Provider Info Pack"
+        url: /assets/pdf/sp-information-pack.pdf
+  - title: Full Platform
+    children:
+      - title: NPP Principle
+        url: /principle
+      - title: API Specification
+        url: /apiv4/index.html
+      - title: Use Cases
+        url: /full-platform-use-cases
+
+
+# Reference Documents
+# Join the NPP
+# Commercials
