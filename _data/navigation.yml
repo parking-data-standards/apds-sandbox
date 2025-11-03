@@ -10,7 +10,7 @@ sidemain:
   - title: "Example Payloads"
     children:
       - title: "Rate Line Types"
-        url: /examples/rate_line_types.md
+        url: /examples/rate_line_types
       - title: "Parking Restrictions"
-        url: /examples/restrictions.md
+        url: /examples/restrictions
 
