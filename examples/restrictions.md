@@ -1,3 +1,10 @@
+---
+layout: home 
+sidebar:
+  nav: sidemain
+title: Parking Restrictions 
+sort: 0
+---
 # Examples for Parking Restrictions
 ## No Parking
 A parking location is not available for parking during the times specified in the Hrs Group, although there is no physical means of preventing parking at the location. Usually applies to on-street (though could also be used for a pay on arrival off street location where there is no facility for restricting access).

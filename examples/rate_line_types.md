@@ -1,3 +1,10 @@
+---
+layout: home 
+sidebar:
+  nav: sidemain
+title: Rate Line Types 
+sort: 0
+---
 # Examples engaging different RateLine Types
 
 ## flatRate
