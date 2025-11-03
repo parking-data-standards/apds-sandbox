@@ -19,3 +19,8 @@ _APDS_ has developed the global parking data standard in form of a comprehensive
 
 ### APDS API
 The _APDS_ working group has also created a comprehensive representation of the APDS data model in form of an **API**. This interface is documented using the [OpenAPI Specification Standard](https://www.openapis.org) originally initiated by [Swagger](https://swagger.io) and then taken over by the **Open APIs** initiative. Depending on the particular application, there might be other ways to describe the model and a derived interface. But _APDS_ figured it would be a good starting point for adopters to have something readily available to base their work on. This repository contains said **APS OpenAPI Specification**.
+
+A browsable version of the _APDS_ API specification can be found [here](/apiv4/index.html).
+
+
+
