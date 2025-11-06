@@ -1567,7 +1567,7 @@ components:
       type: oauth2
       flows:
         clientCredentials:
-          tokenUrl: https://api.npp.org.uk/auth
+          tokenUrl: https://api.parking-data-standards.org
           scopes:
             po: Parking Operator
             sp: Service Provider
@@ -2096,7 +2096,7 @@ components:
       description: Represents a Url for an internet accessible resource.
       type: string
       x-package: common
-      examples: ["https://api.npp.org.uk"]
+      examples: ["https://api.parking-data-standards.org"]
 
     MultilingualString:
       title: MultilingualString
