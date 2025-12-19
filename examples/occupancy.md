@@ -17,7 +17,7 @@ The _Demand_ part provides (dynamic) information on occupied spaces.
 ## Supply
 _Supply_ information can be provided from a `vehicleView` perspective, i.e. a calculated number of vehicles that can be fit into a parking area. Examples for this would be "pop-up parking on a green field" or on-street parking capacity in an area in a particular street (with no clear markings). As an alternative, the _Supply_ data can be specified from a `spaceView` perspective. This requires all spaces to be demarcated and identifiable. The latter view is the default.
 
-Optionally, a validity information can be attached to _Supply_ data in order to communicate temporary changes in the capacity.
+Optionally, a validity information can be attached to _Supply_ data in order to communicate temporary changes in the capacity (see [Example 4](#example-4-temporary-changes-in-supply)).
 
 ## Demand
 _Demand_ information is typically collected in intervals. This update frequency may as well be of interest for readers of _Demand_ information.  
@@ -197,4 +197,43 @@ The car park operators now use these agreed-upon values to communicate occupancy
 The city decides to communicate the received information in form of a "traffic light" model
 
 ![VMS](/assets/images/usecases/VMSDisplay2.png)
+
+## Example 4: (temporary) changes in supply
+The operator of a car park is planning major construction work during the month of January 2026. As a result, the capacity of the car park will be reduced, but the car park will remain open. After the completion of the work, the car park will have an even increased capacity. The operator communicates this by providing supply validity details:
+
+```json5
+{
+    "id": "CARPARK1",
+    "version": 1,
+    "hierarchyElementReference": {
+        "elementId": {
+            "id": "CARPARK1",
+            "version": 1
+        },
+        "supply": [
+            {
+                "supplyViewType": "spaceView",
+                "supplyQuantity": 220,
+                "supplyValidityEnd": "2025-12-31T23:59:59Z"
+            },
+            {
+                "supplyViewType": "spaceView",
+                "supplyQuantity": 75,
+                "supplyValidityStart": "2026-01-01T00:00:00Z",
+                "supplyValidityEnd": "2026-01-31T23:59:59Z"
+            },
+            {
+                "supplyViewType": "spaceView",
+                "supplyQuantity": 300,
+                "supplyValidityStart": "2026-02-01T00:00:00Z"
+            }
+        ]
+    }
+}
+```
+
+The above payload indicates:
+* the well-known current capacity of 220 spaces until end of December 2025,
+* a temporary capacity reduction to 75 spaces during the month of January 2026,
+* an open-ended increased capacity of 300 spaces from February 2026 onwards
 
