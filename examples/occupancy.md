@@ -167,12 +167,14 @@ The city defines the following code list for occupancy levels and offers it unde
         },
         {
             "entryIndex": 2,
-            "definedValue": "scarce",
+            "definedValue": "limited",
             "entryDescription": "limited capacity available"
         }
     ]
 }
 ```
+
+From now on, occupancy information can/must be provided by specifying one of the pre-defined values: `free`, `full`, `limited`.
 
 #### Occupancy info via occupancyLevel
 The car park operators now use these agreed-upon values to communicate occupancy information without disclosing too much detail. The following example shows one of the operators sending an update to the city's parking guidance system:
