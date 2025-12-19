@@ -135,7 +135,7 @@ There is another city with many different car park operators. They all understan
 
 As a compromise solution, they agree upon less specific occupancy information to be provided that will still be good enough for drivers to make a decision.
 
-### Solution: occupanyLevel
+### Solution: occupancyLevel
 In the place hierarchy, APDS offers an element named `occupancyLevel` for this purpose. It holds a property `occupancyIndicator` which points to an entry of a user-defined code list.
 
 #### Excursus: user-defined code lists
