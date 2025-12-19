@@ -95,6 +95,6 @@ Let's take a look at the above payload. As you can see, it provides both, _Suppl
 ### Interpretation
 The city's parking now knows that it can expect to see an update frequency of 3 minutes for the data in question. They will configure their pull schedule accordingly. Together with information coming from other connected parking systems, the most recent occupancy information will then be displayed on VMSes installed throughout the city.
 
-![VMS](/assets/images/usecases(VMSDisplay.png))
+![VMS](/assets/images/usecases/VMSDisplay.png)
 
 _Note:_ APDS provides a common data model for parking related information. It does however leave scope for implementation decisions. You may have noticed that the `demandType` element is an array. Theoretically, an implementor might decide to also provide (limited) historical data. For the above example use case however, one would probably rather only provide the most recent occupancy snapshot.
