@@ -231,7 +231,104 @@ an APDS-speaking data source would publish the tariff information as follows.
                 }
             ]
         }
+    },
+    {
+        "id": "93a0d81e-3157-4c34-a0f7-a639f67ee342",
+        "version": 1,
+        "type": "identifiedArea",
+        "layer": 2,
+        "name": [
+            {
+                "language": "en",
+                "string": "Parkings standard pour voitures"
+            }
+        ],
+        "parent":  {
+            "id": "f4fdae01-929f-47d5-aeaa-4e5d138a83c0",
+            "version": 1,
+        },
+        "timeZone": "Europe/Zurich",
+        "characteristics": {
+            "spacesTotal": 533
+        },
+        "hierarchyElementReference": {
+            "elementId": {
+                "id": "93a0d81e-3157-4c34-a0f7-a639f67ee342",
+                "version": 1,
+            },
+            "supply": [
+                {
+                    "supplyViewType": "spaceView",
+                    "supplyQuantity": 533
+                }
+            ]
+        }
+    },
+    {
+        "id": "36dc833f-f41c-459e-a8f9-f9c7137efdfd",
+        "version": 1,
+        "type": "identifiedArea",
+        "layer": 2,
+        "name": [
+            {
+                "language": "en",
+                "string": "Parkings avec possibilité de recharge"
+            }
+        ],
+        "parent":  {
+            "id": "f4fdae01-929f-47d5-aeaa-4e5d138a83c0",
+            "version": 1,
+        },
+        "timeZone": "Europe/Zurich",
+        "characteristics": {
+            "spacesTotal": 18
+        },
+        "hierarchyElementReference": {
+            "elementId": {
+                "id": "36dc833f-f41c-459e-a8f9-f9c7137efdfd",
+                "version": 1,
+            },
+            "supply": [
+                {
+                    "supplyViewType": "spaceView",
+                    "supplyQuantity": 18
+                }
+            ]
+        }
+    },
+    {
+        "id": "6d93bf8b-b27d-4c2e-9b4f-8587f1d3c46d",
+        "version": 1,
+        "type": "identifiedArea",
+        "layer": 2,
+        "name": [
+            {
+                "language": "en",
+                "string": "Parkings pour motos"
+            }
+        ],
+        "parent":  {
+            "id": "f4fdae01-929f-47d5-aeaa-4e5d138a83c0",
+            "version": 1,
+        },
+        "timeZone": "Europe/Zurich",
+        "characteristics": {
+            "spacesTotal": 64
+        },
+        "hierarchyElementReference": {
+            "elementId": {
+                "id": "6d93bf8b-b27d-4c2e-9b4f-8587f1d3c46d",
+                "version": 1,
+            },
+            "supply": [
+                {
+                    "supplyViewType": "spaceView",
+                    "supplyQuantity": 64
+                }
+            ]
+        }
     }
+
 ]
 ```
 
