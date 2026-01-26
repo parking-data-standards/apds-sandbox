@@ -17,4 +17,6 @@ sidemain:
         url: /examples/rate_line_types
       - title: "Parking Restrictions"
         url: /examples/restrictions
+      - title: "Compound Examples"
+        url /examples/inventory_examples
 
