@@ -18,5 +18,5 @@ sidemain:
       - title: "Parking Restrictions"
         url: /examples/restrictions
       - title: "Compound Examples"
-        url /examples/inventory_examples
+        url: /examples/inventory_examples
 
