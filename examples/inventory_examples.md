@@ -261,6 +261,19 @@ an APDS-speaking data source would publish the tariff information as follows.
                     "supplyViewType": "spaceView",
                     "supplyQuantity": 533
                 }
+            ],
+            "demandTable": [
+                {
+                    "frequency": "PT3M",
+                    "timestamp": "2026-01-26T17:02:00Z",
+                    "demandType": [
+                        {
+                            "occupancyCalculation": "counted",
+                            "count": 500,
+                            "recordDateTime": "2026-01-26T17:01:23Z"
+                        }
+                    ]
+                }
             ]
         }
     },
@@ -292,6 +305,19 @@ an APDS-speaking data source would publish the tariff information as follows.
                 {
                     "supplyViewType": "spaceView",
                     "supplyQuantity": 18
+                }
+            ],
+            "demandTable": [
+                {
+                    "frequency": "PT3M",
+                    "timestamp": "2026-01-26T17:02:00Z",
+                    "demandType": [
+                        {
+                            "occupancyCalculation": "counted",
+                            "count": 16,
+                            "recordDateTime": "2026-01-26T17:01:23Z"
+                        }
+                    ]
                 }
             ]
         }
@@ -325,6 +351,19 @@ an APDS-speaking data source would publish the tariff information as follows.
                     "supplyViewType": "spaceView",
                     "supplyQuantity": 64
                 }
+            ],
+            "demandTable": [
+                {
+                    "frequency": "PT3M",
+                    "timestamp": "2026-01-26T17:02:00Z",
+                    "demandType": [
+                        {
+                            "occupancyCalculation": "counted",
+                            "count": 50,
+                            "recordDateTime": "2026-01-26T17:01:23Z"
+                        }
+                    ]
+                }
             ]
         }
     }
@@ -332,8 +371,13 @@ an APDS-speaking data source would publish the tariff information as follows.
 ]
 ```
 
+The above payload creates what _APDS_ calls a _Place Hieararchy_. In the example, we now have a car park with three _Identified Area_s as children plus a fourth _Identified Area_ describing the main entry area:
+
+![Hierarchy](/assets/images/usecases/hierarchy.png)
+
 ### Right Specification Data
-In APDS, _Right Specifications_ define eligibility criteria for locations and tariffs.
+In APDS, _Right Specifications_ define eligibility criteria for locations and tariffs, i.e. they "tie" the _Rate Table_ to the _Place_ (including potential conditions).  
+That way, it would e.g. be possible to offer a (more expensive) standard tariff and a reduced tariff for electric vehicles.
 
 ```json5
 [
@@ -392,3 +436,4 @@ In APDS, _Right Specifications_ define eligibility criteria for locations and ta
     }
 ]
 ```
+
