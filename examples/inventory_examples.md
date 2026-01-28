@@ -26,7 +26,7 @@ an APDS-speaking data source would publish the tariff information as follows.
         }
     ],
     "availability": "public",
-	"additionalInformation": "https://www.geneve-parking.ch/fr/ou-stationner/pr-etoile",
+    "additionalInformation": "https://www.geneve-parking.ch/fr/ou-stationner/pr-etoile",
     "rateResponsibleParty": {
         "id": "FONDATION_DES_PARKINGS",
         "version": 1,
