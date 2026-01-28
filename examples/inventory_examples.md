@@ -22,84 +22,15 @@ an APDS-speaking data source would publish the tariff information as follows.
     "rateTableName": [
         {
             "language": "ch", 
-            "string": "Tarif P+R simplifié"
+            "string": "Tarif P+R Étoile"
         }
     ],
     "availability": "public",
+	"additionalInformation": "https://www.geneve-parking.ch/fr/ou-stationner/pr-etoile",
     "rateResponsibleParty": {
         "id": "FONDATION_DES_PARKINGS",
         "version": 1,
         "className": "Operator"
-    },
-    "rateLineCollections": [
-        {
-            "id": "79ab1c25-289f-4a6c-b6b3-682ba1dea0e2-0",
-            "version": 1,
-            "collectionSequence": 0,
-            "applicableCurrency": "CHF",
-            "minTime": "PT1H",
-            "rateLines": [
-                {
-                    "id": "79ab1c25-289f-4a6c-b6b3-682ba1dea0e2-0-0",
-                    "version": 1,
-                    "sequence": 0,
-                    "description": [
-                        {
-                            "language": "fr",
-                            "string": "par heure (7 premières heures)"
-                        }
-                    ],
-                    "rateLineType": "flatRateTier",
-                    "value": 3,
-                    "durationStart": "00:00",
-                    "durationEnd": "07:00",
-                    "incrementPeriod": "PT1H",
-                    "usageCondition": "unlimited",
-                    "maxValue": 21
-                },
-                {
-                    "id": "79ab1c25-289f-4a6c-b6b3-682ba1dea0e2-0-1",
-                    "version": 1,
-                    "sequence": 1,
-                    "description": [
-                        {
-                            "language": "fr",
-                            "string": "8 heures à une journée"
-                        }
-                    ],
-                    "rateLineType": "flatRate",
-                    "value": 3,
-                    "incrementPeriod": "PT5H",
-                    "usageCondition": "once"                    }
-            ]
-        }
-    ],
-    "validity": {
-        "validityStatus": "definedByValidityTimeSpec",
-        "validityTimeSpecification": {
-            "overallStartTime": "2026-01-01T00:00:01Z",
-            "validPeriods": [
-                {
-                    "periodName": [
-                        {
-                            "language": "fr",
-                            "string": "Du lundi au vendredi de 7h à 19h"
-                        }
-                    ],
-                    "recurringDayWeekMonthPeriod": [
-                        {
-                            "applicableDay": [ "monday", "tuesday", "wednesday", "thursday", "friday"]
-                        }
-                    ],
-                    "recurringTimePeriodOfDay": [
-                        {
-                            "startTimeOfPeriod": "07:00",
-                            "endTimeOfPeriod": "19:00"
-                        }
-                    ]
-                }
-            ]
-        }
     }
 }
 
