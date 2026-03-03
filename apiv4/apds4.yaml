@@ -2,7 +2,7 @@ openapi: 3.1.0
 
 info:
   title: "APDS API Specification" 
-  version: "4.0"
+  version: "4.1"
   contact:
     name: API Support
     email: technical-comments@allianceforparkingdatastandards.org
@@ -18,9 +18,9 @@ info:
    * Right
    * Session
    * Quote
-   * Oberservation
+   * Observation
 
-   The official APDS specification documents can be request via the [APDS website](https://www.allianceforparkingdatastandards.org 'APDS website').
+   The official APDS specification documents can be requested via the [APDS website](https://www.allianceforparkingdatastandards.org 'APDS website').
 
 
 servers:
@@ -38,15 +38,26 @@ tags:
       The _Right Specifications_ endpoints accept/provide information about charging hours, eligibility criteria and point to applicable tariffs. Each _Right Specification_ applies to one or more _Places_. 
   - name: Assigned Rights
     description: |- 
-      In APDS, _Assigned Rights_ are the representation of parking rights. _Assigned Rights_ are issued by parking operators and/or service providers. As soon as a parking right has been issued to a driver, it is sent to the NPP by the issuing entity. _Assigned Rights_ are the most important source of information for connected enforcement systems to check the eligibility of a parked vehicle.
+      In APDS, _Assigned Rights_ are the representation of parking rights. _Assigned Rights_ are issued by parking operators and/or service providers. As soon as a parking right has been issued to a driver, it is sent to the APDS-speaking platform by the issuing entity. _Assigned Rights_ are the most important source of information for connected enforcement systems to check the eligibility of a parked vehicle.
   - name: Sessions
     description: |-
-      In APDS, _Sessions_ describe the act of actively making use of a previously-obtained parking right (_Assigned Right_). When drivers park their vehicles or leave the parking location, the service provider’s backend or the operator’s parking management system report this to the NPP. _Session_ data can later be read from the NPP to support use cases like .e.g.
-      * checking a challenged PCN (e.g. via the _Session Viewer_ application)
+      In APDS, _Sessions_ describe the act of actively making use of a previously-obtained parking right (_Assigned Right_). When drivers park their vehicles or leave the parking location, the service providers backend or the operators parking management system report this to the APDS-speaking central system. _Session_ data can later be read from the platform to support use cases like .e.g.
+      * checking a challenged penalty charge notification
       * checking the details of a parking session (via an enforcement system)
+  - name: Observation
+    description: |-
+      Endpoints to accept/provide _Observation_ related information
+  - name: Quote
+    description: |-
+      Endpoints for _Quotes_ related information
+  - name: Organisations
+    description: |-
+      Many classes in the APDS data model include references to organisations (e.g. parking operators or service providers). These endpoints allow the typcial CRUD operation on such data
   - name: Subscription
     description: |-
-      For _Assigned Right_ information, _Session Data_, and _System Events_, the NPP offers both, PULL and PUSH mode. The latter is implemented in form of webhooks. An interested entity can subscribe to one or more topics, potentially for a subset of the active NPP parking locations. 
+      For _Assigned Right_ information, _Session Data_, _Place_, _Right Specification_ and _Rate Table_ data, an APDS-speaking platform may offer both, PULL and PUSH mode. The latter is implemented in form of webhooks. An interested entity can subscribe to one or more topics, potentially for a subset of the active places. 
+
+# ===== API ENDPOINTS =============================================================================================================================================================================================================== #    
 
 paths:
 
@@ -321,6 +332,202 @@ paths:
                     code: 409
                     message: Place can not be deleted due to conflicting data.
 
+  # ===== Observations ===== #
+  /observations:
+    get:
+      summary: get list of recorded observations
+      tags:
+        - Observation
+      operationId: get-observations
+      description: |-
+        Lists `Observations` and allows searching/filtering by:
+
+        * latitude, longitude, radius: to check for `Observations` within a geographic area
+        * a list of `Places`, to retrieve all Observations within a set of parking locations
+        * start_before: to get observations starting before a given instant
+        * end_before: to get observations ending before a given instant
+        * start_after: to get observations starting after a given instant
+        * end_after: to get observations ending after a given instant
+        * a modification instant: to only display changed resources from that point onwards
+
+        Additionally, supports providing a comma-separated list of optional object attributes associated to an `Observation` that should be included in the result set. If unused or left blank, `none` will be assumed.
+      parameters:
+        - $ref: '#/components/parameters/place_ids'
+        - $ref: '#/components/parameters/latitude'
+        - $ref: '#/components/parameters/longitude'
+        - $ref: '#/components/parameters/radius'
+        - $ref: '#/components/parameters/modified_since'
+        - $ref: '#/components/parameters/start_before'
+        - $ref: '#/components/parameters/end_before'
+        - $ref: '#/components/parameters/start_after'
+        - $ref: '#/components/parameters/end_after'      
+
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf: 
+                  - $ref: '#/components/schemas/PaginatedListMeta'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items: 
+                          $ref: '#/components/schemas/ObservationElement'
+
+    post:
+      summary: create an Observation or Observation Set
+      tags:
+        - Observation
+      operationId: post-observations
+      description: |-
+        create a singular `Observation` or an `Observation Set`
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - type: object
+                  properties:
+                    type: 
+                      $ref: '#/components/schemas/ObservationDataType'
+                - oneOf:
+                    - $ref: '#/components/schemas/ObservationElement'
+                    - $ref: '#/components/schemas/ObservationSet'
+                  discriminator:
+                    propertyName: type
+                    mapping:
+                      ObservationElement: '#/components/schemas/ObservationElement'
+                      ObvservationSet: '#/components/schemas/ObservationSet'
+              required:
+                - type
+            examples:
+              single-element:
+                value:
+                  type: ObservationElement
+                  method: visual
+                  observer: Officer Peterson
+                  observationStartTime: 2026-01-01T10:02:00Z
+                  creationDateTime: 2026-01-01T10:04:00Z
+                  observedCredentialId: BD51 SMR
+                  location:
+                    observerLocation:
+                      type: Point
+                      coordinates: [-2.3058626,53.4723193]
+                  observerOrganisation: 
+                    id: SAMPLECITY
+                    version: 1
+
+
+  '/observations/{id}':
+    get:
+      summary: get a specific observation element
+      tags: 
+        - Observation
+      operationId: get-observation-id
+      description: get the latest version of a given `Observation` by its identifier (or a particular previous version when provided as a query parameter)
+      parameters:
+        - schema:
+            type: string
+          name: id
+          in: path
+          required: true
+          description: unique observation identifier
+        - $ref: '#/components/parameters/version'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ObservationElement'
+        '404':
+          description: NOT FOUND
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResponseStatus'
+    put:
+      summary: update a specific observation element
+      tags: 
+        - Observation
+      operationId: update-observation-id
+      description: update the given  `Observation` 
+      parameters:
+        - schema:
+            type: string
+          name: id
+          in: path
+          required: true
+          description: unique observation identifier
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResponseStatus'
+        '404':
+          description: NOT FOUND
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResponseStatus'
+              examples:
+                not-found:
+                  value:
+                    status: error
+                    code: 404
+                    message: observation with given id does not exist
+        '409':
+          description: CONFLICT
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResponseStatus'
+              examples:
+                not-found:
+                  value:
+                    status: error
+                    code: 409
+                    message: outdated version number provided
+    delete:
+      summary: delete a specific observation element
+      tags: 
+        - Observation
+      operationId: delete-observation-id
+      description: delete the given  `Observation` 
+      parameters:
+        - schema:
+            type: string
+          name: id
+          in: path
+          required: true
+          description: unique observation identifier
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResponseStatus'
+        '404':
+          description: NOT FOUND
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResponseStatus'
+              examples:
+                not-found:
+                  value:
+                    status: error
+                    code: 404
+                    message: observation with given id does not exist
+
+
   # ===== Operational Data ===== #
   /contacts:
 
@@ -344,7 +551,7 @@ paths:
             
 
       tags:
-        - Operational Data
+        - Organisations
       responses:
         "200":
           description: OK
@@ -396,6 +603,51 @@ paths:
                     code: 500
                     message: internal server error
 
+    post:
+      summary: create a new contact
+      description: create a new contact point record which can then be referenced by other data elements
+      operationId: post-contact
+      tags:
+        - Organisations
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContactPoint'
+
+      responses:
+        '201':
+          description: CREATED
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResponseStatus'
+        '409':
+          description: CONFLICT
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResponseStatus'
+              examples:
+                duplicate-id:
+                  value:
+                    status: error
+                    code: 409
+                    message: a contact point with this id already exists
+        '400':
+          description: BAD REQUEST
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResponseStatus'
+              examples:
+                missing-fields:
+                  value:
+                    status: error
+                    code: 400
+                    message: missing require fields
+
   /contacts/{contactId}:
 
     parameters:
@@ -418,7 +670,7 @@ paths:
       operationId: get-single-contact
 
       tags:
-        - Operational Data
+        - Organisations
       responses:
         "200":
           description: OK
@@ -462,6 +714,93 @@ paths:
                     status: error
                     code: 500
                     message: internal server error
+
+    put:
+      summary: update existing contact
+      description: update an existing contact point record which can then be referenced by other data elements
+      operationId: put-contact
+      tags:
+        - Organisations
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContactPoint'
+
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResponseStatus'
+              examples:
+                contact-updated:
+                  value:
+                    status: ok
+                    code: 200
+                    message: contact 359e20ec-a836-4365-aa62-07de0993cb20 successfully updated
+        '404':
+          description: NOT FOUND
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResponseStatus'
+              examples:
+                duplicate-id:
+                  value:
+                    status: error
+                    code: 404
+                    message: a contact point with this id does not exist
+
+    delete:
+      summary: delete existing contact
+      description: delete an existing contact point record
+      operationId: delete-contact
+      tags:
+        - Organisations
+
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResponseStatus'
+              examples:
+                contact-updated:
+                  value:
+                    status: ok
+                    code: 200
+                    message: contact 359e20ec-a836-4365-aa62-07de0993cb20 successfully deleted
+        '404':
+          description: NOT FOUND
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResponseStatus'
+              examples:
+                duplicate-id:
+                  value:
+                    status: error
+                    code: 404
+                    message: a contact point with this id does not exist
+
+        '409':
+          description: CONFLICT
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResponseStatus'
+              examples:
+                duplicate-id:
+                  value:
+                    status: error
+                    code: 409
+                    message: contact point cannot be deleted as it is referenced by existing record(s)
+
+
 
   # ===== Right Specifications ===== #
 
@@ -1296,7 +1635,9 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/AssignedRight'
+              oneOf:
+              - $ref: '#/components/schemas/AssignedRight'
+              - $ref: '#/components/schemas/ReferenceToQuote'
       responses:
         "201":
           description: Created
@@ -1308,7 +1649,7 @@ paths:
                 ok:
                   value:
                     status: ok
-                    code: 200
+                    code: 201
                     message: Assigned right created successfully.
         "400":
           description: Bad Request
@@ -1504,16 +1845,123 @@ paths:
                     code: 409
                     message: Assigned right can not be deleted due to conflicting data.
 
+# ==== Quotes ==== #
+
+  /quotes:
+    get:
+      summary: get quotes
+      description: get quotes matching specified criteria
+      operationId: get-quote
+      tags:
+        - Quote
+      parameters:
+        - $ref: '#/components/parameters/latitude'
+        - $ref: '#/components/parameters/longitude'
+        - $ref: '#/components/parameters/radius'
+        - $ref: '#/components/parameters/modified_since'
+        - $ref: '#/components/parameters/place_ids'
+        - $ref: '#/components/parameters/right_spec_ids'
+        - $ref: '#/components/parameters/quote_type'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/QuoteRightRequest'
+                  - $ref: '#/components/schemas/QuoteRightResponse'
+                  - $ref: '#/components/schemas/QuoteSessionExtensionRequest'
+                  - $ref: '#/components/schemas/QuoteSessionExtensionResponse'
+
+    post:
+      summary: create quote request
+      description: submit a request for a quote
+      operationId: post-quote
+      tags:
+        - Quote
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginatedListMeta'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          oneOf:
+                            - $ref: '#/components/schemas/QuoteRightResponse'
+                            - $ref: '#/components/schemas/QuoteSessionExtensionResponse'
+
+  '/quotes/{id}':
+    parameters:
+      - schema:
+          type: string
+        name: id
+        in: path
+        required: true
+        description: unique id of the quote
+
+    get:
+      summary: get details of a specific quote
+      description: get details of quote identified by `id`
+      operationId: get-quote-id
+      tags:
+        - Quote
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/QuoteRightRequest'
+                  - $ref: '#/components/schemas/QuoteRightResponse'
+                  - $ref: '#/components/schemas/QuoteSessionExtensionRequest'
+                  - $ref: '#/components/schemas/QuoteSessionExtensionResponse'
+        '404':
+          description: NOT FOUND
+          content:
+            application/json:
+              schema: 
+                $ref: '#/components/schemas/ResponseStatus'
+              examples:
+                not-found:
+                  value:
+                    status: error
+                    code: 404
+                    message: requested item does not exist
+
+# ==== Subscription ==== #
   /webhooks:
     post:
       summary: subscribe to one or more event topics
-      description: adds a new subscription (with the specified endpoint receiving notifications on selected topics for selected locations)
+      description: |-
+        adds a new subscription (with the specified endpoint receiving notifications on selected topics for selected locations)
+        subscription requests will typically be checked by back-office personnel and approved / declined based on platform operator criteria
+
       operationId: post-webhooks
       tags:
         - Subscription
       responses:
         '200':
-          description: OK
+          description: OK, subscription approved and activated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResponseStatus'
+
+        '202':
+          description: ACCEPTED, subscription request received; will be processed and then approved/declined
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResponseStatus'
+
       requestBody:
         content:
           application/json:
@@ -1525,40 +1973,138 @@ paths:
                 value: 
                   {
                     "endpoint": "https://mybackend.event-notifications.com",
-                    "topics": [ "SystemEvents"]
+                    "topics": [ "AssignedRightCreated", "AssignedRightUpdated", "AssignedRightDeleted"]
                   }
 
       callbacks:
-        systemAlert:
+        dataNotificationEvent:
           "{$request.body#/endpoint}":
             post:
-              summary: report a system alert (or its resolution)
+              summary: report a data event (record of a specific type has been created/updated/deleted)
+              description: |-
+                It is recommended to (on per-project basis) agree upon a custom request header indicating the type of event. This should have a value of type `EventTypeEnum``
               requestBody:
                 required: true
                 content:
                   application/json:
                     schema:
-                      $ref: '#/components/schemas/SystemAlert'
+                      $ref: '#/components/schemas/EventData'
+
                     examples:
-                      responseTimeAlert:
-                        summary: notification of degraded response time
+                      right-specification-created:
+                        summary: notification for new right specification
                         value:
-                          {
-                            "id": "c7874361-cdca-467d-a389-f9ab6b8e411c",
-                            "timestamp": "2025-05-01T17:12:02Z",
-                            "start": "2025-05-01T17:11:52Z",
-                            "type": "triggered",
-                            "metric": "npp.api.responsetime.average",
-                            "condition": "acceptable threshold of 10 seconds exceeded for more than 5 minutes",
-                            "description": "The average response time continues to be above the acceptable threshold of 10 seconds. The NPP team has identified the issue and is working on its resolution.",
-                            "impact": ["responseTime"]
-                          }
+
+                          '{
+                              "id": "fdcd8eb0-ca08-4481-8f9b-999ba63c91d0",
+                              "version": 1,
+                              "description": [
+                                  {
+                                      "language": "en",
+                                      "string": "Standard Day"
+                                  }
+                              ],
+                              "transferable": false,
+                              "issuer": {
+                                  "id": "OPERATOR1",
+                                  "version": 1,
+                                  "className": "Operator"
+                              },
+                              "hierarchyElements": [
+                                  {
+                                      "id": "15f524ad-52a4-4372-8f52-e8c4d00ad87f",
+                                      "version": 1
+                                  }
+                              ],
+                              "type": "oneTimeUseParking",
+                              "rateEligibility": [
+                                  {
+                                      "id": "7c7f24d5-9bda-4e9c-abbc-db9f09afb7c0",
+                                      "version": 1,
+                                      "rateTable": {
+                                          "id": "65850d6b-5b72-44ee-a00f-a68094d2196b",
+                                          "version": 1
+                                      }
+                                  }
+                              ],
+                              "validity": {
+                                  "validityStatus": "definedByValidityTimeSpec",
+                                  "validityTimeSpecification": {
+                                      "overallStartTime": "2025-10-31T00:00:00Z",
+                                      "validPeriods": [
+                                          {
+                                              "periodName": [
+                                                  {
+                                                      "language": "en",
+                                                      "string": "Mon-Fri between 8am and 5pm"
+                                                  }
+                                              ],
+                                              "recurringTimePeriodOfDay": [
+                                                  {
+                                                      "startTimeOfPeriod": "08:00",
+                                                      "endTimeOfPeriod": "17:00"
+                                                  }
+                                              ],
+                                              "recurringDayWeekMonthPeriod": [
+                                                  {
+                                                      "applicableDay": [
+                                                          "monday",
+                                                          "tuesday",
+                                                          "wednesday",
+                                                          "thursday",
+                                                          "friday"
+                                                      ]
+                                                  }
+                                              ]
+                                          }
+                                      ]
+                                  }
+                              }
+                          }'
+
+
               responses:
                 '200':
                   description: OK
 
+  '/webhooks/{id}':
+    parameters:
+      - schema:
+          type: string
+        name: id
+        in: path
+        required: true
+        description: Unique identifier for the existing subscription
 
-  
+    delete:
+      summary: revoke (delete) existing subscription
+      description: revoke (delete) existing subscription
+      tags:
+        - Subscription
+      responses:
+        '200':
+          description: subscription deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResponseStatus'              
+        '404':
+          description: subscription not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResponseStatus'
+              examples:
+                not-found:
+                  value:
+                    status: error
+                    code: 404
+                    message: a subscription with this id does not exist
+                
+# ===== END OF API ENDPOINTS ======================================================================================================================================================================================================= #
+
+# ===== API COMPONENTS ============================================================================================================================================================================================================= #
+
 components:
 
   securitySchemes:
@@ -1888,9 +2434,24 @@ components:
       style: form
       explode: false
 
-  schemas:
+
+    # ===== Quotes ===== #
+
+    quote_type:
+      name: quote_type
+      in: query
+      schema:
+        type: string
+        description: type of quote element requested
+        enum:
+           - QuoteRightRequest
+           - QuoteRightResponse
+           - QuoteSessionExtensionRequest
+           - QuoteSessionExtensionResponse
 
     #=== API ===#
+
+  schemas:
 
     ResponseStatusEnum:
       title: ResponseStatusEnum
@@ -2040,8 +2601,8 @@ components:
       description: EN ISO 3166-1 two-character country code.
       type: string
       x-package: common
-      pattern: "^[a-z]{2}$"
-      examples: [en]
+      pattern: "^[A-Z]{2}$"
+      examples: [GB]
 
     CurrencyCode:
       title: CurrencyCode
@@ -2308,101 +2869,320 @@ components:
 
     #=== Common - GeoJSON ===#
 
-    GeoJsonGeometryTypeEnum:
-      title: GeoJsonGeometryTypeEnum
-      description: GeoJson geometry type
-      type: string
-      x-package: common.geojson.enums
-      enum:
-        - Point
-        - LineString
-        - MultiPolygon
+    GeoJsonObject:
+      title: GeoJsonObject
+      description: |-
+        GeoJSon object
 
-    GeoJsonGeometry:
-      title: GeoJsonGeometry
-      description: GeoJson geometry object
+        The coordinate reference system for all GeoJSON coordinates is a
+        geographic coordinate reference system, using the World Geodetic System
+        1984 (WGS 84) datum, with longitude and latitude units of decimal
+        degrees.
+        This is equivalent to the coordinate reference system identified by the
+        Open Geospatial Consortium (OGC) URN
+        An OPTIONAL third-position element SHALL be the height in meters above
+        or below the WGS 84 reference ellipsoid.
+        In the absence of elevation values, applications sensitive to height or
+        depth SHOULD interpret positions as being at local ground or sea level.
+
       type: object
-      x-package: common.geojson
-      discriminator:
-        propertyName: type
-        mapping:
-          Point: '#/components/schemas/GeoJsonPoint'
-          LineString: '#/components/schemas/GeoJsonLineString'
-          MultiPolygon: '#/components/schemas/GeoJsonMultiPolygon'
       properties:
-        type:
-          $ref: '#/components/schemas/GeoJsonGeometryTypeEnum'
+        'type':
+          type: string
+          enum:
+          - Feature
+          - FeatureCollection
+          - Point
+          - MultiPoint
+          - LineString
+          - MultiLineString
+          - Polygon
+          - MultiPolygon
+          - GeometryCollection
+        'bbox':
+          description: |-
+            A GeoJSON object MAY have a member named "bbox" to include
+            information on the coordinate range for its Geometries, Features, or
+            FeatureCollections. The value of the bbox member MUST be an array of
+            length 2*n where n is the number of dimensions represented in the
+            contained geometries, with all axes of the most southwesterly point
+            followed by all axes of the more northeasterly point. The axes order
+            of a bbox follows the axes order of geometries.
+          type: array
+          items:
+            type: number
       required:
+      - type
+      discriminator:  
+        propertyName: type
+
+    Geometry:
+      title: Geometry
+      description: |-
+        Abstract type for all GeoJSon object except Feature and
+        FeatureCollection
+
+      allOf:
+      - $ref: '#/components/schemas/GeoJsonObject'
+      - type: object
+        properties:
+          'type':
+            type: string
+            enum:
+            - Point
+            - MultiPoint
+            - LineString
+            - MultiLineString
+            - Polygon
+            - MultiPolygon
+            - GeometryCollection
+        required:
         - type
+        discriminator:
+          propertyName: type
 
-    GeoJsonPoint:
-      title: GeoJsonPoint
-      description: GeoJson Point
-      type: object
-      x-package: common.geojson
-      allOf:
-        - $ref: '#/components/schemas/GeoJsonGeometry'
-        - type: object
-          properties:
-            coordinates:
-              $ref: '#/components/schemas/GeoJson2DPoint'
+    'GeometryElement':
+      description: |-
+        Abstract type for all GeoJSon 'Geometry' object the type of which is not
+        'GeometryCollection'
 
-    GeoJsonLineString:
-      title: GeoJsonLineString
-      description: GeoJson Line String
-      type: object
-      x-package: common.geojson
       allOf:
-        - $ref: '#/components/schemas/GeoJsonGeometry'
+      - $ref: '#/components/schemas/Geometry'
+      - type: object
+        properties:
+          'type':
+            type: string
+            enum:
+            - Point
+            - MultiPoint
+            - LineString
+            - MultiLineString
+            - Polygon
+            - MultiPolygon
+        required:
+        - type
+        discriminator:
+          propertyName: type
+
+    'Feature':
+      description: GeoJSon 'Feature' object
+
+      allOf:
+      - $ref: '#/components/schemas/GeoJsonObject'
+      - type: object
+        required:
+        - geometry
+        - properties
+        properties:
+          'geometry':
+            allOf:
+            - $ref: '#/components/schemas/Geometry'
+          'properties':
+            type: object
+          'id':
+            oneOf:
+            - type: number
+            - type: string
+
+    
+    'FeatureCollection':
+      description: GeoJSon 'FeatureCollection' object
+      allOf:
+      - $ref: '#/components/schemas/GeoJsonObject'
+      - type: object
+        required:
+        - features
+        properties:
+          'features':
+            type: array
+            items:
+              $ref: '#/components/schemas/Feature'
+
+    
+    Position:
+      title: Position
+      description: |-
+        GeoJSon fundamental geometry construct.
+
+        A position is an array of numbers. There MUST be two or more elements.
+        The first two elements are longitude and latitude, or easting and
+        northing, precisely in that order and using decimal numbers.
+        Altitude or elevation MAY be included as an optional third element.
+
+        Implementations SHOULD NOT extend positions beyond three elements
+        because the semantics of extra elements are unspecified and ambiguous.
+        Historically, some implementations have used a fourth element to carry
+        a linear referencing measure (sometimes denoted as "M") or a numerical
+        timestamp, but in most situations a parser will not be able to properly
+        interpret these values. The interpretation and meaning of additional
+        elements is beyond the scope of this specification, and additional
+        elements MAY be ignored by parsers.
+
+      type: array
+      minItems: 2
+      maxItems: 3
+      items:
+        type: number
+
+    
+    LineStringCoordinates:
+      title: LineStringCoordinates
+      description: |-
+        GeoJSon fundamental geometry construct, array of two or more positions.
+      type: array
+      items:
+        $ref: '#/components/schemas/Position'
+      minItems: 2
+
+    
+    LinearRing:
+      title: LinearRing
+      description: |-
+        A linear ring is a closed LineString with four or more positions.
+
+        The first and last positions are equivalent, and they MUST contain
+        identical values; their representation SHOULD also be identical.
+
+        A linear ring is the boundary of a surface or the boundary of a hole in
+        a surface.
+
+        A linear ring MUST follow the right-hand rule with respect to the area
+        it bounds, i.e., exterior rings are counterclockwise, and holes are
+        clockwise.
+      type: array
+      items:
+        $ref: '#/components/schemas/Position'
+      minItems: 4
+
+    
+    Point:
+      title: Point
+      description: GeoJSon geometry
+      allOf:
+        - $ref: '#/components/schemas/GeometryElement'
         - type: object
+          required:
+          - type
+          - coordinates
           properties:
-            coordinates:
+            'type':
+              type: 'string'
+              enum: [Point]
+            'coordinates':
+              $ref: '#/components/schemas/Position'
+
+    
+    MultiPoint:
+      title: MultiPoint
+      description: GeoJSon geometry
+      allOf:
+        - $ref: '#/components/schemas/GeometryElement'
+        - type: object
+          required:
+          - coordinates
+          properties:
+            'coordinates':
               type: array
-              minItems: 2
               items:
-                $ref: '#/components/schemas/GeoJson2DPoint'
+                $ref: '#/components/schemas/Position'
 
-    GeoJsonMultiPolygon:
-      title: GeoJsonMultiPolygon
-      description: GeoJson MultiPolygon
-      type: object
-      x-package: common.geojson
+    
+    LineString:
+      title: LineString
+      description: GeoJSon geometry
       allOf:
-        - $ref: '#/components/schemas/GeoJsonGeometry'
+        - $ref: '#/components/schemas/GeometryElement'
         - type: object
+          required:
+          - coordinates
           properties:
-            coordinates:
+            'coordinates':
+              $ref: '#/components/schemas/LineStringCoordinates'
+
+    
+    MultiLineString:
+      title: MultiLineString
+      description: GeoJSon geometry
+      allOf:
+        - $ref: '#/components/schemas/GeometryElement'
+        - type: object
+          required:
+          - coordinates
+          properties:
+            'coordinates':
+              type: array
+              items:
+                $ref: '#/components/schemas/LineStringCoordinates'
+
+    
+    Polygon:
+      title: Polygon
+      description: GeoJSon geometry
+      allOf:
+        - $ref: '#/components/schemas/GeometryElement'
+        - type: object
+          required:
+          - coordinates
+          properties:
+            'coordinates':
+              type: array
+              items:
+                $ref: '#/components/schemas/LinearRing'
+
+    
+    MultiPolygon:
+      title: MultiPolygon
+      description: GeoJSon geometry
+      allOf:
+        - $ref: '#/components/schemas/GeometryElement'
+        - type: object
+          required:
+          - coordinates
+          properties:
+            'coordinates':
               type: array
               items:
                 type: array
                 items:
-                  type: array
-                  items:
-                    $ref: '#/components/schemas/GeoJson2DPoint'
+                  $ref: '#/components/schemas/LinearRing'
 
-    GeoJson2DPoint:
-      title: GeoJson2DPoint
-      description: GeoJson 2D Point
-      type: array
-      x-package: common.geojson
-      maxItems: 2
-      minItems: 2
-      items:
-        type: number
+    
+    GeometryCollection:
+      title: GeometryCollection
+      type: object
+      description: |-
+        GeoJSon geometry collection
 
+        GeometryCollections composed of a single part or a number of parts of a
+        single type SHOULD be avoided when that single part or a single object
+        of multipart type (MultiPoint, MultiLineString, or MultiPolygon) could
+        be used instead.
+      allOf:
+        - $ref: '#/components/schemas/Geometry'
+        - type: object
+          required:
+          - geometries
+          properties:
+            'geometries':
+              type: array
+              items:
+                $ref: '#/components/schemas/GeometryElement'
+              minItems: 0
+
+ 
     PointLocation:
       title: PointLocation
-      description: Represents a single geospatial point using GeoJSON.
+      description: Represents one or more geospatial points using GeoJSON (ideally of type Point or MultiPoint or corresponding Feature)
       type: object
       x-package: common.geojson
-      $ref: '#/components/schemas/GeoJsonPoint'
+      $ref: '#/components/schemas/GeoJsonObject'
 
     AreaLocation:
       title: AreaLocation
-      description: Represents a geographic or geometric defined area using GeoJSON
+      description: Represents a geographic or geometric defined area using GeoJSON (ideally of type Polygon or MultiPolygon or corresponding Feature)
       type: object
       x-package: common.geojson
-      $ref: '#/components/schemas/GeoJsonMultiPolygon'
+      $ref: '#/components/schemas/GeoJsonObject'
 
     #=== Common - Units ===#
 
@@ -2735,11 +3515,11 @@ components:
         - place
         - space
         - subplaceElement
-        #- specificArea
-        #- vehicularAccess
-        #- electricChargingEquipment
-        #- supplementalEquipment
-        #- supplementalServiceFacility
+        - specificArea
+        - vehicularAccess
+        - electricChargingEquipment
+        - supplementalEquipment
+        - supplementalServiceFacility
 
     RoadTypeEnum:
       title: RoadTypeEnum
@@ -3201,7 +3981,7 @@ components:
               description: Place bounded zone
               items:
                 $ref: '#/components/schemas/AreaLocation'
-            indicativePlacePointLocation:
+            indicativePointLocation:
               type: array
               description: Indicative place point location
               items:
@@ -3362,7 +4142,7 @@ components:
               description: Identified area bounded zone.
               items:
                 $ref: '#/components/schemas/AreaLocation'
-            indicativeIdentifiedAreaPointLocation:
+            indicativePointLocation:
               type: array
               description: Indicative identified area point location.
               items:
@@ -3567,10 +4347,10 @@ components:
       title: OperatingModeTypeEnum
       description: |-
         A list of supported parking operation modes
-        * app : App – payment is collected via an app that may also control access to the facility.
-        * payAndDisplay : PND – pay and display. Vehicle displays a credential to show it is paid. Typically prepaid and short term.
+        * app : App â€“ payment is collected via an app that may also control access to the facility.
+        * payAndDisplay : PND â€“ pay and display. Vehicle displays a credential to show it is paid. Typically prepaid and short term.
         * payByPlate : PBP - pay by plate - vehicle registration or license plate is used for recording and enforcement either on street or off street. Payment is collected on a prepaid basis or at the exit.
-        * payBySpace : PBS – pay by space. Vehicle makes a payment based on occupying a specific space. Typically prepaid.
+        * payBySpace : PBS â€“ pay by space. Vehicle makes a payment based on occupying a specific space. Typically prepaid.
         * permit : Similar to PND but for long term parking (e.g. monthly pass, quarterly, semester).
         * ticket : Payment is done with a ticket (e.g. with magnetic strip, barcode). Payment is collected at the exit.
       type: string
@@ -5230,7 +6010,8 @@ components:
         * ethanol : Ethanol\n* hydrogen: Hydrogen
         * liquidGas : Liquid gas of any type including LPG
         * lpg : Liquid petroleum gas\n* methane: Methane gas
-        * other : Other\n* petrol: Fuel used for positive-ignition (PI) engines
+        * other : Other
+        * petrol: Fuel used for positive-ignition (PI) engines
         * petrol95Octane : Petrol with 95 octane\n* petrol98Octane: Petrol with 98 octane
         * petrolBatteryHybrid : Petrol and battery hybrid
         * petrolLeaded : Leaded petrol
@@ -6597,22 +7378,25 @@ components:
       title: EntranceOpenTime
       description: Specification of periods of times when parking entrance(s) are open for vehicle movements.
       type: object
+      allOf:
+        - $ref: '#/components/schemas/PeriodsOrValidity'
       x-package: time
-      $ref: '#/components/schemas/PeriodsOrValidity'
 
     ExitOpenTime:
       title: ExitOpenTime
       description: Specification of periods of times when parking exit(s) are open for vehicle movements.
       type: object
+      allOf:
+        - $ref: '#/components/schemas/PeriodsOrValidity'
       x-package: time
-      $ref: '#/components/schemas/PeriodsOrValidity'
 
     OperatingTime:
       title: OperatingTime
       description: Specification of periods or time when the parking operates, do not represents times of accessibility.
       type: object
+      allOf:
+        - $ref: '#/components/schemas/PeriodsOrValidity'
       x-package: time
-      $ref: '#/components/schemas/PeriodsOrValidity'
 
     TimesOfDay:
       title: TimesOfDay
@@ -6662,6 +7446,18 @@ components:
         latestEndRelative:
           $ref: '#/components/schemas/TimeUnitRelativeEnum'
 
+    EventData:
+      title: EventData
+      description: data of created / updated / deleted record
+      type: object
+      oneOf:
+        - $ref: '#/components/schemas/HierarchyElement'
+        - $ref: '#/components/schemas/RightSpecification'
+        - $ref: '#/components/schemas/RateTable'
+        - $ref: '#/components/schemas/AssignedRight'
+        - $ref: '#/components/schemas/Session'
+        - $ref: '#/components/schemas/Contact'
+
     EventTypeEnum:
       title: EventTypeEnum
       type: string
@@ -6672,10 +7468,21 @@ components:
         - SessionCreated
         - SessionUpdated
         - SessionDeleted
-        - SystemEvents
+        - PlaceCreated
+        - PlaceUpdated
+        - PlaceDeleted
+        - RightSpecificationCreated
+        - RightSpecificationUpdated
+        - RightSpecificationDeleted
+        - RateCreated
+        - RateUpdated
+        - RateDeleted
+        - OrganisationCreated
+        - OrganisationUpdated
+        - OrganisationDeleted
 
     EventSubscription:
-      title: subscription to data events and/or system alerts
+      title: subscription to data events 
       type: object
       properties:
         endpoint:
@@ -6687,3 +7494,503 @@ components:
           items:
             $ref: '#/components/schemas/EventTypeEnum'
 
+#=== OBSERVATION ===#
+
+    Image:
+        title: Image
+        description: 'Class containing information relating to still or moving image observation evidence or a reference (link) to such observation evidence.'
+        properties:
+          id:
+            type: string
+            description: 'Reference identifier to a specific image.'
+          image:
+            type: string
+            description: 'Base64 File or binary object containing a still or moving image.'
+          imageLink:
+            $ref: '#/components/schemas/Url'
+          imageType:
+            $ref: '#/components/schemas/ImageTypeEnum'
+          cameraID:
+            type: string
+            description: identification code for the camera device
+          cameraDistance:
+            type: number
+            format: float
+            description: recorded distance in metres between the camera and observation
+        required:
+          - id
+        x-tags:
+          - observation
+    
+    Location:
+        title: Location
+        type: object
+        description: "Positional information relating to an observation for both the observation target ('observed') and the source ('observer')."
+        properties:
+          observedLocation:
+            $ref: '#/components/schemas/PointLocation'
+          observedLocationTextual:
+            $ref: '#/components/schemas/MultilingualString'
+          observerLocation:
+            $ref: '#/components/schemas/PointLocation'
+        required:
+          - observerLocation
+        x-tags:
+          - observation
+
+    ObservationTypeEnum:
+      type: string
+      title: ObservationTypeEnum
+      description: |-
+        A list of the supported observation types.
+
+        * `anpr`: Automatic vehicle license plate recognition
+        * `chalk`: Chalk-mark observation or similar
+        * `rfTransponder`: Rf transponder radio frequency transponder device, for toll tag or similar radio based devices
+        * `scanner`: Handheld or fixed scanning device (optical)
+        * `visual`: Visual (human) observation
+      enum:
+        - anpr
+        - chalk
+        - rfTransponder
+        - scanner
+        - visual
+      x-tags:
+        - enumeration
+
+    ImageTypeEnum:
+      title: ImageTypeEnum
+      description: the nature of the captured image
+      type: string
+      enum:
+        - overview
+        - plate
+      x-tags:
+        - enumeration
+
+    CharacterConfidence:
+      title: CharacterConfidence
+      description: confidence of observation measurement
+      type: object
+      properties:
+        confidence:
+          description: |-
+            confidence of the observation measurement for a specific indexed character - can be vendor-specific but rescaled to a value between 0 and 1, with 1 being greatest confidence
+          type: number
+          format: float
+          minimum: 0
+          maximum: 1
+        index:
+          description: index reference to a specific character within an observed sequence
+          type: integer
+          minimum: 0
+      required:
+        - confidence
+        - index
+
+    Confidence:
+      title: Confidence
+      description: overall confidence of the observation measurement
+      type: object
+      properties:
+        overallConfidence:
+          description: |-
+            overall confidence of the observation measurement - can be vendor-specific but rescaled to a value between 0 and 1, with 1 being greatest confidence
+          type: number
+          format: float
+          minimum: 0
+          maximum: 1
+ 
+    ObservationDataType:
+      title: ObservationDataType
+      description: used as discriminator between a single observation element and an observation set
+      type: string
+      enum:
+        - ObservationElement
+        - ObservationSet
+
+    ObservationElement:
+      title: ObservationElement
+      allOf:
+        - $ref: '#/components/schemas/VersionedIdentity'
+        - type: object
+          properties:
+            method:
+              $ref: '#/components/schemas/ObservationTypeEnum'
+            observer:
+              type: string
+              description: The individual person making the observation recorded in this observation element.
+            type:
+              $ref: '#/components/schemas/CredentialTypeEnum'
+            observedCredentialId:
+              type: string
+              description: Specific identifier to the referenced observed credential.
+            observationStartTime:
+              type: string
+              format: date-time
+              description: The initial date and time of the observation.
+            observationEndTime:
+              type: string
+              format: date-time
+              description: 'The ending date and time of the observation, when it was continous since `observationStartTime`.'
+            description:
+              $ref: '#/components/schemas/MultilingualString'
+            creationDateTime:
+              type: string
+              format: date-time
+              description: The date and time stamp for the creation of the observation element.
+            location:
+              $ref: '#/components/schemas/Location'
+            images:
+              type: array
+              description: still or moving images observation evidence or a reference to such observation evidence
+              items:
+                $ref: '#/components/schemas/Image'
+            elementIds:
+              $ref: '#/components/schemas/VersionedReference'
+            vehicleAncillaryIdentification:
+              $ref: '#/components/schemas/VehicleAncillaryIdentification'
+            observerOrganisation:
+              $ref: '#/components/schemas/VersionedReference'
+            confidence:
+              $ref: '#/components/schemas/Confidence'
+            characterConfidence:
+              $ref: '#/components/schemas/CharacterConfidence'
+
+          required:
+            - method
+            - observationStartTime
+            - creationDateTime
+            - location
+            - observerOrganisation
+      description: A specific collection of observation details intended to be used for one specific observation instance.
+      x-tags:
+        - observation    
+
+    ObservationSet:
+      title: ObservationSet
+      description: Details of the collection of a set of related recorded observations.
+      allOf:
+        - $ref: '#/components/schemas/VersionedIdentity'
+        - type: object
+          properties:
+            creationDateTime:
+              type: string
+              description: |-
+                The date and time of the creation of the
+                observation set.
+              format: date-time
+            creator:
+              $ref: '#/components/schemas/VersionedReference'
+            observationElements:
+              type: array
+              description: Individual observations in the set
+              items:
+                $ref: '#/components/schemas/ObservationElement'
+          required:
+            - creationDateTime
+            - creator
+      x-tags:
+        - observation
+
+#=== QUOTES ===#
+
+    QuoteRightRequest:
+      title: QuoteRightRequest
+      description: class containing data elements required to request a quote for a new transaction
+      allOf:
+        - $ref: '#/components/schemas/VersionedIdentity'
+        - type: object
+          properties:
+            eligibility:
+              $ref: '#/components/schemas/Eligibility'
+            referencedRightSpecifications:
+              type: array
+              items:
+                $ref: '#/components/schemas/ReferencedRightSpecification'
+            periodStart:
+              type: string
+              format: date-time
+              description: request date/time for the start of a proposed new transactions
+            periodEnd:
+              type: string
+              format: date-time
+              description: request date/time for the end of a proposed new transactions
+            requestTime:
+              type: string
+              format: date-time
+              description: date/time at which the request was made
+            timePeriods:
+              type: array
+              items:
+                $ref: '#/components/schemas/Duration'
+              description: requested duration for the proposed new transaction
+          required:
+            - periodStart
+            - requestTime
+      x-package: Quotes
+      x-tags: Quotes
+
+    ResponseReasonEnum:
+      title: ResponseReasonEnum
+      description: |
+        A list of supported reasons if a requested quote response is not provided
+
+        * `eligibilityRequirementNotMet`: a stated eligibility requirement is not considered to be met
+        * `noAvailability`: No availability for request
+        * `noMatchingSpecification`: No matching rights specification found
+        * `other`: other reason (reason not given)
+        * `rightSpecificationNotAvailableAtRequestedTimes`: the requested specification is not available at the requested time
+      type: string
+      enum:
+        - eligibilityRequirementNotMet
+        - noAvailability
+        - noMatchingSpecification
+        - other
+        - rightSpecificationNotAvailableAtRequestedTimes    
+      x-package: Quotes
+      x-tags: Quotes
+
+
+    QuoteRightResponse:
+      title: QuoteRightResponse
+      description: class containing data to support response to request for quote for a new transaction
+      allOf:
+        - $ref: '#/components/schemas/VersionedIdentity'
+        - type: object
+          properties:
+            start:
+              type: string
+              description: date/time for the start of the proposed new transaction
+              format: date-time
+            end:
+              type: string
+              description: date/time for the end of the proposed new transaction
+              format: date-time
+            requestTime:
+              type: string
+              description: date/time at which the request for a quote was recorded/registered by the supplier
+              format: date-time
+            reason:
+              $ref: '#/components/schemas/ResponseReasonEnum'
+            quoteRequestId:
+              $ref: '#/components/schemas/VersionedReference'
+            responseTime:
+              description: date/time at which the response is made by the supplier
+              format: date-time
+              type: string
+            options:
+              type: array
+              items:
+                $ref: '#/components/schemas/Option'
+          required:
+            - start
+            - end
+            - requestTime
+            - quoteRequestId
+            - responseTime      
+      x-package: Quotes
+      x-tags: Quotes
+
+    QuoteSessionExtensionRequest:
+      title: QuoteSessionExtensionRequest
+      description: class containing detail required to initiate a request for a quote to extend an existing session
+      allOf:
+        - $ref: '#/components/schemas/VersionedIdentity'
+        - type: object
+          properties:
+            requestedEndTime:
+              type: string
+              description: proposed date/time at which the proposed extended Session would end
+              format: date-time
+            requestTime:
+              type: string
+              description: reference date/time at which the request for a quote for a session extension is made
+              format: date-time
+            sessionId:
+              $ref: '#/components/schemas/VersionedReference'
+            suppliedCredential:
+              $ref: '#/components/schemas/VersionedReference'
+          required:
+            - requestedEndTime
+            - requestTime
+            - sessionId
+            - suppliedCredential    
+      x-package: Quotes
+      x-tags: Quotes
+
+    QuoteRightResponseExtensionReasonEnum:
+      title: QuoteRightResponseExtensionReasonEnum
+      description: |
+        A list of supported reasons if a requested session extension request is not provided
+
+        * `existingSessionNotFound`: Error – the existing session referenced is not found
+        * `incorrectCredentialsSupplied`: Error – credential details supplied are incorrect
+        * `noExtensionPossible`: Error – the requested extension is not possible
+      type: string
+      enum:
+        - existingSessionNotFound
+        - incorrectCredentialsSupplied
+        - noExtensionPossible
+      x-package: Quotes
+      x-tags: Quotes
+
+    QuoteSessionExtensionResponse:
+      title: QuoteSessionExtensionResponse
+      description: class containing data to support response to request for quote to extend an existing Session
+      allOf:
+        - $ref: '#/components/schemas/VersionedIdentity'
+        - type: object
+          properties:
+            requestSessionExtensionId:
+              $ref: '#/components/schemas/VersionedReference'
+            sessionId:
+              $ref: '#/components/schemas/VersionedReference'
+            requestTime:
+              type: string
+              format: date-time
+              description: date/time at which the request for a quote was recorded/registered by the supplier
+            responseTime:
+              type: string
+              format: date-time
+              description: date/time at which the response is made by the supplier
+            revisedEndTime:
+              type: string
+              format: date-time
+              description: Date/time of the revised session end time
+            reason:
+              $ref: '#/components/schemas/QuoteRightResponseExtensionReasonEnum'
+          required:
+            - requestSessionExtensionId
+            - sessionId
+            - requestTime
+            - responseTime
+            - revisedEndTime
+      x-package: Quotes
+      x-tags: Quotes
+
+
+    FinancialQuote:
+      title: FinancialQuote
+      type: object
+      description: class containing information on financila value of a quote
+      properties:
+        serviceProvider:
+          $ref: '#/components/schemas/VersionedReference'
+        taxIncluded:
+          type: boolean
+          description: whether tax is included in the specified monetary value or not
+        transactionId:
+          type: string
+          description: identifier for the transaction (e.g. reservation number) as agreed upon by the two entities sharing data
+        value:
+          $ref: '#/components/schemas/AmountInCurrency'
+      required:
+        - taxIncluded
+        - value
+      x-package: Quotes
+      x-tags: Quotes
+
+    Identifiers:
+      title: Identifiers
+      description: compound reference for rate table and right specification
+      properties:
+        rateTableID:
+          $ref: '#/components/schemas/VersionedReference'
+        rightSpecificationId:
+          $ref: '#/components/schemas/VersionedReference'
+      required:
+        - rateTableId
+        - rightSpecificationId
+      x-package: Quotes
+      x-tags: Quotes
+
+    QuoteExpiration:
+      title: QuoteExpiration
+      description: class defining conditions indicating the end of the validity of a quote
+      properties:
+        expiresDateTime:
+          type: string
+          format: date-time
+        firstComeFirstServe:
+          type: boolean
+          description: 'a Boolean value shows that the availability of an Option and thus FinancialQuote are available to the requester on a first come first served basis, with no assurance that the advertised RightSpecification will be available based on actual demand'
+      required:
+        - firstComeFirstServe          
+      x-package: Quotes
+      x-tags: Quotes
+
+
+    Option:
+      title: Option
+      description: Class providing one option to a quote request
+      allOf:
+        - $ref: '#/components/schemas/VersionedIdentity'
+        - type: object
+          properties:
+            elementId:
+              $ref: '#/components/schemas/VersionedReference'
+            exact:
+              type: boolean
+              description: indicates the supplied Option fully covers the time period requested
+            quoteExpiration:
+              $ref: '#/components/schemas/QuoteExpiration'
+            identifiers:
+              type: array
+              minItems: 1
+              items:
+                $ref: '#/components/schemas/Identifiers'
+            financialQuote:
+              $ref: '#/components/schemas/FinancialQuote'
+          required:
+            - quoteExpiration
+            - financialQuote    
+      x-package: Quotes
+      x-tags: Quotes
+
+    ReferencedRightSpecification:
+      title: ReferencedRightSpecification
+      type: object
+      description: class to support referencing a RightSpecification
+      properties:
+        elementId:
+          $ref: '#/components/schemas/VersionedReference'
+        rightSpecificationId:
+          $ref: '#/components/schemas/VersionedReference'
+      required:
+        - rightSpecificationId
+      x-package: Quotes
+      x-tags: Quotes
+
+    ReferenceQuoteNew:
+      title: ReferenceQuoteNew
+      type: object
+      description: Class providing a versioned reference to a new quote
+      properties:
+        quoteResponseId:
+          $ref: '#/components/schemas/VersionedReference'
+        optionId:
+          $ref: '#/components/schemas/VersionedReference'
+      x-package: Quotes
+      x-tags: Quotes
+
+    ReferenceQuoteExtension:
+      title: ReferenceQuoteExtension
+      type: object
+      description: Class providing a versioned reference to a quote for a session extension
+      properties:
+        quoteResponseId:
+          $ref: '#/components/schemas/VersionedReference'
+        optionId:
+          $ref: '#/components/schemas/VersionedReference'
+      x-package: Quotes
+      x-tags: Quotes
+
+    ReferenceToQuote:
+      title: ReferenceToQuote
+      description: Class defining a reference to a specific Quote
+      oneOf:
+        - $ref: '#/components/schemas/ReferenceQuoteExtension'
+        - $ref: '#/components/schemas/ReferenceQuoteNew'
+      x-package: Quotes
+      x-tags: Quotes
