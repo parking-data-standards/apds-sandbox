@@ -59,11 +59,17 @@ an APDS-speaking data source would publish the tariff information as follows.
         ],
         "timeZone": "Europe/Zurich",
         "indicativePointLocation": {
-            "type": "Point",
-            "coordinates": [
-                6.128169788,
-                46.186960303
-            ]
+			"type": "Feature",
+			"geometry": {
+	            "type": "Point",
+            	"coordinates": [
+                	6.128169788,
+                	46.186960303
+            	]
+			},
+			"properties": {
+				"name": "Parking"
+			}
         },
         "placeStreetAddress": {
             "countryCode": "CH",
@@ -132,11 +138,17 @@ an APDS-speaking data source would publish the tariff information as follows.
         },
         "timeZone": "Europe/Zurich",
         "indicativePointLocation": {
-            "type": "Point",
-            "coordinates": [
-                6.12733,
-                46.185688
-            ]
+			"type": "Feature",
+			"geometry": {
+	            "type": "Point",
+            	"coordinates": [
+                	6.12733,
+                	46.185688
+            	]
+			},
+			"properties": {
+				"name": "Localisation Entrée Principale"
+			}
         },
         "placeStreetAddress": {
             "countryCode": "CH",
@@ -481,11 +493,17 @@ Here is the _APDS_ representation of the P+R Sécheron tariff:
         ],
         "timeZone": "Europe/Zurich",
         "indicativePointLocation": {
-            "type": "Point",
-            "coordinates": [
-                6.145382384,
-                46.220735699
-            ]
+			"type": "Feature",
+			"geometry": {
+	            "type": "Point",
+            	"coordinates": [
+                	6.145382384,
+                	46.220735699
+            	]
+			},
+			"properties": {
+				"name": "Parking"
+			}
         },
         "placeStreetAddress": {
             "countryCode": "CH",
@@ -583,11 +601,17 @@ Here is the _APDS_ representation of the P+R Sécheron tariff:
         },
         "timeZone": "Europe/Zurich",
         "indicativePointLocation": {
-            "type": "Point",
-            "coordinates": [
-                6.1455893577004,
-                46.221146070017
-            ]
+			"type": "Feature",
+			"geometry": {
+	            "type": "Point",
+            	"coordinates": [
+                	6.1455893577004,
+                	46.221146070017
+            	]
+			},
+			"properties": {
+				"name": "Localisation Entrée Principale"
+			}
         },
         "placeStreetAddress": {
             "countryCode": "CH",
