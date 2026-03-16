@@ -14,7 +14,7 @@ Besides the core infrastructure specifics, tariff information is provided, too.
 ### Rate Table Data
 an APDS-speaking data source would publish the tariff information as follows.
 
-```json5
+```json
 
 {
     "id": "79ab1c25-289f-4a6c-b6b3-682ba1dea0e2",
@@ -38,7 +38,7 @@ an APDS-speaking data source would publish the tariff information as follows.
 
 ### Place Data
 
-```json5
+```json
 [
     {
         "id": "f4fdae01-929f-47d5-aeaa-4e5d138a83c0",
@@ -320,7 +320,7 @@ The above payload creates a part of what _APDS_ calls a _Place Hieararchy_. In t
 In APDS, _Right Specifications_ define eligibility criteria for locations and tariffs, i.e. they "tie" the _Rate Table_ to the _Place_ (including potential conditions).  
 That way, it would e.g. be possible to offer a (more expensive) standard tariff and a reduced tariff for electric vehicles.
 
-```json5
+```json
 [
     {
         "id": "88d5835f-a957-42fc-b228-01bd4301fdee",
@@ -384,7 +384,7 @@ The second parking location (P+R Sécheron) is similarly structured.
 ### Rate Table
 Here is the _APDS_ representation of the P+R Sécheron tariff:
 
-```json5
+```json
 
 {
     "id": "006a3d45-eee1-44eb-9e53-ce4163359d9f",
@@ -478,7 +478,7 @@ Here is the _APDS_ representation of the P+R Sécheron tariff:
 
 ### Place Data
 
-```json5
+```json
 [
     {
         "id": "34a71857-1fd0-4eac-82e4-4ff8c8700ffa",
@@ -805,7 +805,7 @@ Please take note of the specified operating restrictions indicating when the par
 ### Right Specification Data
 Like you already saw in the first example, one (or more) _Right Specification_s define who is eligible for which tariff and when. Here is the corresponding spec for P+R Sécheron:
 
-```json5
+```json
 [
     {
         "id": "32d7f4b1-fcf2-467f-b536-b77aef90372e",
