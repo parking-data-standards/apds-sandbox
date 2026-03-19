@@ -129,8 +129,10 @@ an APDS-speaking data source would publish the tariff information as follows.
         "accessType": "entry",
         "layer": 2,
         "name": [
-            "language": "fr",
-            "string": "Zone d'entrée"
+			{
+	            "language": "fr",
+            	"string": "Zone d'entrée"
+			}
         ],
         "parent":  {
             "id": "f4fdae01-929f-47d5-aeaa-4e5d138a83c0",
