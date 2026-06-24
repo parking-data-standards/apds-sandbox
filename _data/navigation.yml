@@ -20,3 +20,8 @@ sidemain:
       - title: "Compound Examples"
         url: /examples/inventory_examples
 
+  - title: "Guides, Best Practice"
+    children:
+      - title: "Cookbook: Parking Data Publication"
+        url: /assets/pdf/HowToPublishAndInterpretParkingDataInAPDSOnModi.pdf
+

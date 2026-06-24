@@ -594,8 +594,10 @@ Here is the _APDS_ representation of the P+R Sécheron tariff:
         "accessType": "entry",
         "layer": 2,
         "name": [
-            "language": "fr",
-            "string": "Zone d'entrée"
+			{
+	            "language": "fr",
+	            "string": "Zone d'entrée"
+			}
         ],
         "parent":  {
             "id": "34a71857-1fd0-4eac-82e4-4ff8c8700ffa",
